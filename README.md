@@ -6,76 +6,116 @@ A CLI tool for batch video compression using FFmpeg. Reduce file sizes for stora
 
 - **Preset-based compression** — ultrafast to veryslow encoding presets
 - **Quality control** — CRF (Constant Rate Factor) 0–51
-- **Multiple file handling modes** — keep originals, overwrite, or backup
+- **Multiple file handling modes** — keep, overwrite, or backup
 - **Parallel processing** — multi-threaded compression with live worker scaling
 - **Split-parallel encoding** — split large files into N parts and encode simultaneously
-- **GPU acceleration** — NVIDIA / Intel / AMD / Apple (10–50x faster, 10–20% larger)
+- **GPU acceleration** — NVIDIA, Intel, AMD, or Apple (10–50x faster, 10–20% larger)
 - **Size targeting** — `--max-size` auto-picks CRF per file
-- **Progress bars** — real-time progress with ETA, colorized results
-- **Live controls** — pause/resume, skip, adjust workers mid-run
-- **Smart skip** — detects already compressed files, resumes from done-log
-- **Dry-run & info modes** — preview, summarize, analyze without modifying files
-- **Recursive directory scanning** — process entire folder trees
-- **Config file support** — YAML configuration with local overrides
-- **Disk-space guard** — stop queueing below a free-space threshold
-- **Cleanup** — `--clean` removes leftover temp/part files
+- **Progress bars** — real-time progress with ETA and colorized results
+- **Live controls** — pause, resume, skip, and adjust workers mid-run
+- **Smart skip** — detects already compressed files and resumes from the done-log
+- **Inspect modes** — preview, summarize, and analyze without modifying files
+- **Recursive scanning** — process entire folder trees
+- **Config files** — YAML configuration with local overrides
+- **Disk-space guard** — stops queueing below a free-space threshold
+- **Cleanup** — `--clean` removes leftover temp and part files
+
+## Prerequisites
+
+- Python 3.8+
+- FFmpeg installed and available in `PATH`
+
+```bash
+# Windows
+winget install Gyan.FFmpeg
+
+# macOS
+brew install ffmpeg
+
+# Linux
+sudo apt install ffmpeg
+```
 
 ## Installation
 
-```bash
-# Install FFmpeg first (required)
-# Windows: winget install Gyan.FFmpeg
-# macOS: brew install ffmpeg
-# Linux: apt install ffmpeg
+Clone the repository and install in editable mode:
 
-# Install the compressor
+```bash
+git clone https://github.com/NoobKQ/video-compressor.git
+cd video-compressor
 pip install -e .
+```
+
+Verify the install:
+
+```bash
+compressor --help
 ```
 
 ## Usage
 
+### Basic compression
+
 ```bash
-# Basic usage - compress all videos in directory
+# Compress all videos in a directory
 compressor ./videos
 
 # Custom output directory (keep mode)
-compressor ./videos -o ./compressed
+compressor ./videos -o ./my-output
+```
 
+### Quality and picture
+
+```bash
 # High quality (slower, better quality)
 compressor ./videos --preset slow --crf 20
 
 # Downscale and cap frame rate
 compressor ./videos --scale 720p --fps 30
 
-# Overwrite originals
-compressor ./videos --mode overwrite
-
-# Backup originals before compressing
-compressor ./videos --mode backup
-
-# Preview what would happen
-compressor ./videos --dry-run
-
-# Use GPU encoding
-compressor ./videos --gpu auto
-
 # Cap each output file to 100 MB (auto-picks CRF)
 compressor ./videos --max-size 100
+```
+
+### Speed
+
+```bash
+# Use GPU encoding
+compressor ./videos --gpu auto
 
 # Use 8 parallel workers
 compressor ./videos --workers 8
 
 # Split big files into 4 parallel parts
 compressor ./videos --split-segments 4
+```
+
+### File handling
+
+```bash
+# Overwrite originals
+compressor ./videos --mode overwrite
+
+# Back up originals before compressing
+compressor ./videos --mode backup
 
 # Only process specific extensions
 compressor ./videos --ext mp4,mkv
 
 # Skip already compressed files
 compressor ./videos --skip-compressed
+```
 
-# Inspect videos without compressing
+### Inspect without changing files
+
+```bash
+# Preview what would happen
+compressor ./videos --dry-run
+
+# Summarize the collection
 compressor ./videos --info
+
+# Show per-file details
 compressor ./videos --info-all
 
 # Analyze savings per option with test encodes
@@ -85,35 +125,61 @@ compressor ./videos --analyze
 compressor ./videos --clean
 ```
 
-## File Handling Modes
+### File handling modes
 
 | Mode | Behavior |
 |------|----------|
-| `keep` | Originals preserved, compressed files in `./compressed/` |
-| `overwrite` | Original files replaced with compressed versions |
-| `backup` | Originals moved to `./.backup/`, compressed files replace originals |
+| `keep` | Originals preserved; compressed files go to `./compressed/` |
+| `overwrite` | Original files are replaced with compressed versions |
+| `backup` | Originals move to `./.backup/`; compressed files replace originals |
 
-## Interactive Controls
+### Interactive controls
 
-While compressing, these keys work live:
+These keys work live while compressing:
 
 | Key | Action |
 |-----|--------|
-| `P` | Pause / resume all encodes |
+| `P` | Pause or resume all encodes |
 | `S` | Skip the currently running video(s) |
 | `[` | Decrease workers |
 | `]` | Increase workers |
 | `Ctrl+C` | Stop everything and clean up temp files |
 
+### Presets guide
+
+| Preset | Speed | Compression | Use case |
+|--------|-------|-------------|----------|
+| ultrafast | Fastest | Lowest | Quick tests |
+| veryfast | Very fast | Low | Draft processing |
+| faster | Fast | Medium | Batch processing |
+| fast | Moderate | Good | General use |
+| **medium** | **Balanced** | **Good** | **Default** |
+| slow | Slow | Better | Quality priority |
+| slower | Very slow | High | Archive quality |
+| veryslow | Slowest | Highest | Maximum quality |
+
+### CRF guide
+
+| CRF | Quality | File size |
+|-----|---------|-----------|
+| 16–18 | Visually lossless | Large |
+| 20 | High quality | Medium-large |
+| **23** | **Good (default)** | **Medium** |
+| 26–28 | Decent | Medium-small |
+| 30–32 | Acceptable | Small |
+| 35+ | Noticeable loss | Very small |
+
 ## Configuration
 
-Config files are merged in this order (later wins):
+Config files merge in this order. Later files win:
 
 1. Built-in defaults
 2. `./config.yaml` (project root)
 3. `~/.config/compressor/config.yaml` (user config)
-4. `./config.local.yaml` (your local overrides, not committed)
+4. `./config.local.yaml` (local overrides, not committed)
 5. `~/.config/compressor/config.local.yaml` (global local overrides)
+
+Example `config.yaml`:
 
 ```yaml
 encoding:
@@ -146,35 +212,20 @@ gpu:
   fallback_cpu: true
 ```
 
-## Presets Guide
+You can also load a specific file with `--config FILE`.
 
-| Preset | Speed | Compression | Use Case |
-|--------|-------|-------------|----------|
-| ultrafast | Fastest | Lowest | Quick tests |
-| veryfast | Very fast | Low | Draft processing |
-| faster | Fast | Medium | Batch processing |
-| fast | Moderate | Good | General use |
-| **medium** | **Balanced** | **Good** | **Default** |
-| slow | Slow | Better | Quality priority |
-| slower | Very slow | High | Archive quality |
-| veryslow | Slowest | Highest | Maximum quality |
+## Contributing
 
-## CRF Guide
+Contributions are welcome.
 
-| CRF | Quality | File Size |
-|-----|---------|-----------|
-| 16–18 | Visually lossless | Large |
-| 20 | High quality | Medium-large |
-| **23** | **Good (default)** | **Medium** |
-| 26–28 | Decent | Medium-small |
-| 30–32 | Acceptable | Small |
-| 35+ | Noticeable loss | Very small |
+1. Fork the repository
+2. Create a feature branch: `git checkout -b my-feature`
+3. Make your changes
+4. Run a quick smoke test: `compressor --help` and `compressor ./sample --dry-run`
+5. Commit and open a pull request
 
-## Requirements
-
-- Python 3.8+
-- FFmpeg installed and in PATH
+[TODO: add a CONTRIBUTING.md with coding style, test commands, and issue templates]
 
 ## License
 
-MIT
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
