@@ -1,0 +1,55 @@
+# Video Compressor Configuration
+# Copy to ~/.config/compressor/config.yaml or .compressor.yaml in project root
+
+# Encoding settings
+encoding:
+  preset: "medium"        # ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
+  crf: 23                 # Quality 18-28 (lower = better quality, larger file)
+  codec: "libx264"        # Video codec (libx264, libx265, libvpx-vp9, libsvtav1, copy)
+  audio_codec: "libopus"  # Audio codec (aac, libopus, copy)
+  audio_bitrate: "64k"    # Audio bitrate
+  audio_threshold: null   # Keep original audio if source bitrate is below this (null = same as audio_bitrate)
+  threads: 0              # 0 = auto (FFmpeg decides)
+
+# Video processing
+video:
+  scale: null             # Resolution: 1080p, 720p, 480p, 360p, or 0.5 (50%), or null to keep
+  scale_threshold: null   # Skip scaling if source height is below this (null = same as scale)
+  fps: null               # Frame rate: 30, 24, 60, or null to keep original
+  fps_threshold: null     # Skip fps change if source fps is below this (null = same as fps)
+  keep_aspect: true       # Maintain aspect ratio when scaling
+
+# Processing settings
+processing:
+  workers: auto           # Parallel jobs: number or auto (half CPUs for CPU, more for GPU)
+  skip_compressed: true   # Skip files that appear already compressed
+  min_size_mb: 1          # Skip files smaller than this
+  split_segments: 0       # Split big files into N parts for parallel encoding (0 = off)
+  split_min_size_mb: 500  # Only split files at least this big (MB)
+  extensions:             # Video extensions to process
+    - "mp4"
+    - "mov"
+    - "mkv"
+    - "avi"
+    - "webm"
+    - "flv"
+    - "wmv"
+    - "m4v"
+
+# File handling
+file_handling:
+  mode: "keep"            # keep, overwrite, backup
+  backup_dir: ".backup"   # Directory for backup mode (relative to input)
+  output_dir: "compressed" # Output directory for keep mode (relative to input)
+
+# GPU acceleration
+gpu:
+  enabled: false           # Enable GPU acceleration
+  vendor: "auto"           # auto, nvidia, intel, amd, apple
+  fallback_cpu: true       # Fallback to CPU if GPU encoder fails
+
+# Behavior
+behavior:
+  dry_run: false          # Preview only, no actual compression
+  verbose: false          # Detailed output
+  overwrite_output: false # Overwrite existing output files

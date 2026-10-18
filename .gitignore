@@ -1,0 +1,22 @@
+# Personal machine overrides - never committed (your settings live here,
+# published defaults live in config.yaml).
+config.local.yaml
+
+# Python
+__pycache__/
+*.egg-info/
+build/
+dist/
+.venv/
+
+# Compressor run artifacts
+.compressor-done.json
+.compressor-parts/
+compressed/
+.backup/
+*.tmp-compress.mp4
+*.tmp-join.mp4
+*.test.mp4
+*.sizetest.mp4
+*.tmp.mp4
+*.concat.txt
