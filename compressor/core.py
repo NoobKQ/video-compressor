@@ -44,6 +44,27 @@ def _parse_bitrate(value) -> Optional[int]:
         return None
 
 
+def _spawn_kwargs(priority: str = "below_normal") -> dict:
+    """Lower child process priority so encodes don't freeze the desktop.
+
+    On Windows, BELOW_NORMAL lets the scheduler preempt ffmpeg the moment
+    the user opens an app or a browser tab, instead of fighting it for CPU.
+    No-op on other platforms.
+    """
+    if os.name != "nt":
+        return {}
+    table = {
+        "normal": subprocess.NORMAL_PRIORITY_CLASS,
+        "below_normal": subprocess.BELOW_NORMAL_PRIORITY_CLASS,
+        "idle": subprocess.IDLE_PRIORITY_CLASS,
+    }
+    return {"creationflags": table.get(priority, subprocess.BELOW_NORMAL_PRIORITY_CLASS)}
+
+
+def _encoding_priority(config: dict) -> str:
+    return (config or {}).get("encoding", {}).get("priority") or "below_normal"
+
+
 def ffprobe_json(input_path: Path, timeout: int = 60) -> Optional[dict]:
     """Run ffprobe with a timeout; None on any failure (never hangs)."""
     try:
@@ -53,6 +74,7 @@ def ffprobe_json(input_path: Path, timeout: int = 60) -> Optional[dict]:
              str(input_path)],
             capture_output=True, text=True,
             encoding="utf-8", errors="replace", timeout=timeout,
+            **_spawn_kwargs(),
         )
         if r.returncode != 0 or not r.stdout.strip():
             return None
@@ -324,7 +346,8 @@ class VideoCompressor:
                     str(test_output),
                 ])
                 
-                result = subprocess.run(cmd, capture_output=True, timeout=30)
+                result = subprocess.run(cmd, capture_output=True, timeout=30,
+                                        **_spawn_kwargs(_encoding_priority(self.config)))
                 
                 elapsed = time.time() - start_time
                 
@@ -422,6 +445,7 @@ class VideoCompressor:
                 encoding="utf-8",
                 errors="replace",
                 bufsize=1,
+                **_spawn_kwargs(_encoding_priority(self.config)),
             )
             with self._proc_lock:
                 self._active_processes.add(process)
@@ -540,7 +564,8 @@ class VideoCompressor:
                 str(sample_path),
             ])
             try:
-                r = subprocess.run(cmd, capture_output=True, timeout=120)
+                r = subprocess.run(cmd, capture_output=True, timeout=120,
+                                   **_spawn_kwargs(_encoding_priority(self.config)))
                 if r.returncode != 0 or not sample_path.exists():
                     break
                 sample_size = sample_path.stat().st_size

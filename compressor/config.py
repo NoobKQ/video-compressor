@@ -16,6 +16,7 @@ DEFAULT_CONFIG = {
         "audio_bitrate": "128k",
         "audio_threshold": None,
         "threads": 0,
+        "priority": "below_normal",
     },
     "video": {
         "scale": None,

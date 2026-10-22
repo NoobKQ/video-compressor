@@ -10,6 +10,7 @@ encoding:
   audio_bitrate: "64k"    # Audio bitrate
   audio_threshold: null   # Keep original audio if source bitrate is below this (null = same as audio_bitrate)
   threads: 0              # 0 = auto (FFmpeg decides)
+  priority: below_normal  # Process priority: normal, below_normal, idle (keeps your PC responsive while encoding)
 
 # Video processing
 video:

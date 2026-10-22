@@ -1,5 +1,6 @@
 """Split big videos into keyframe-aligned segments for parallel encoding."""
 
+import os
 import subprocess
 from pathlib import Path
 from typing import List, Optional
@@ -8,11 +9,15 @@ from typing import List, Optional
 # from scans so interrupted runs never reprocess leftovers.
 PARTS_DIR_NAME = ".compressor-parts"
 
+# Below-normal priority so split/concat never steal CPU from the desktop.
+_RUN_KW = ({"creationflags": subprocess.BELOW_NORMAL_PRIORITY_CLASS}
+           if os.name == "nt" else {})
+
 
 def _run(cmd: List[str], timeout: int = 120) -> subprocess.CompletedProcess:
     return subprocess.run(
         cmd, capture_output=True, text=True,
-        encoding="utf-8", errors="replace", timeout=timeout,
+        encoding="utf-8", errors="replace", timeout=timeout, **_RUN_KW,
     )
 
 
