@@ -24,8 +24,11 @@ class FileHandler:
         backup_path = None
 
         if self.mode == "overwrite":
-            output_path = input_path.with_suffix(".mp4")
-            # No backup needed, will overwrite directly
+            # Encode to a temp file: FFmpeg cannot read and write the same
+            # path (e.g. movie.mp4 in -> movie.mp4 out). finalize() replaces
+            # the original with the temp once the encode succeeds.
+            final_output = input_path.with_suffix(".mp4")
+            output_path = final_output.with_name(final_output.stem + ".tmp-compress.mp4")
         elif self.mode == "backup":
             # Backup dir/file are only created after compression succeeds.
             backup_dir = input_path.parent / self.backup_dir_name
@@ -78,8 +81,20 @@ class FileHandler:
                 shutil.move(str(temp_output), str(final_output))
                 result.output_path = final_output
         elif self.mode == "overwrite":
-            # Output is already in place (overwrote original)
-            pass
+            # Move the temp encode over the original (same -y semantics:
+            # any stale final file is replaced).
+            temp_output = result.output_path
+            src = input_path or result.input_path
+            final_output = src.with_suffix(".mp4")
+            if temp_output is not None and temp_output.exists():
+                if final_output.exists() and final_output != temp_output:
+                    final_output.unlink()
+                shutil.move(str(temp_output), str(final_output))
+                # Non-mp4 inputs were renamed; remove the old original so
+                # the folder holds only the compressed replacement.
+                if src != final_output and src.exists():
+                    src.unlink()
+                result.output_path = final_output
         else:  # keep
             # Original preserved, output in output_dir
             pass

@@ -212,7 +212,7 @@ Exit codes: 0 success, 1 error, 130 interrupted.""",
     proc_group.add_argument(
         "--split-segments",
         type=int,
-        default=0,
+        default=None,
         metavar="N",
         help="Split big files into N parallel parts. Default: 0 (off).",
     )

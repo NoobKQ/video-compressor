@@ -138,7 +138,7 @@ def merge_configs(config: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         config["processing"]["skip_compressed"] = args.skip_compressed
     if args.min_size:
         config["processing"]["min_size_mb"] = args.min_size
-    if args.split_segments:
+    if args.split_segments is not None:
         config["processing"]["split_segments"] = args.split_segments
     if args.split_min_size is not None:
         config["processing"]["split_min_size_mb"] = args.split_min_size
